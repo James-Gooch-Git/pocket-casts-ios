@@ -1,5 +1,6 @@
 8.17
 -----
+- Fix the Download button doing nothing in Search and Discover episode results [#4702](https://github.com/Automattic/pocket-casts-ios/pull/4702)
 
 
 8.16
