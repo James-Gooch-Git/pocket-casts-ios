@@ -1,5 +1,6 @@
 8.17
 -----
+- Load the podcasts grid earlier so it's populated by the time the tab is shown [#4715](https://github.com/Automattic/pocket-casts-ios/pull/4715)
 - Fix player opening on Bookmarks tab in RTL languages [#4696](https://github.com/Automattic/pocket-casts-ios/pull/4696)
 
 8.16
