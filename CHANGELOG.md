@@ -1,5 +1,6 @@
 8.17
 -----
+- Episode details loads show notes and artwork a little bit faster [#4714](https://github.com/Automattic/pocket-casts-ios/pull/4714)
 - Fix player opening on Bookmarks tab in RTL languages [#4696](https://github.com/Automattic/pocket-casts-ios/pull/4696)
 
 8.16
