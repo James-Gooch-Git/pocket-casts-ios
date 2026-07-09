@@ -1,5 +1,6 @@
 import Foundation
 import PocketCastsDataModel
+import PocketCastsUtils
 
 public class ServerPodcastManager: NSObject {
     private static let maxAutoDownloadSeperationTime = 12.hours
@@ -126,35 +127,52 @@ public class ServerPodcastManager: NSObject {
         }
     }
 
-    public func addMissingPodcast(episodeUuid: String, podcastUuid: String) {
+    public func addMissingPodcast(episodeUuid: String, podcastUuid: String) async throws {
         let url = ServerConstants.Urls.cache() + "mobile/podcast/findbyepisode/\(podcastUuid)/\(episodeUuid)"
 
-        if let info = loadFrom(url: url), addPodcast(podcastInfo: info, subscribe: false, lastModified: nil) {
-            // all good
+        do {
+            if let info = try await loadFrom(url: url), addPodcast(podcastInfo: info, subscribe: false, lastModified: nil) {
+                // all good
+            }
+        } catch {
+            FileLog.shared.addMessage("ServerPodcastManager: failed to load missing podcast \(podcastUuid): \(error)")
+            throw error
         }
     }
 
-    public func addMissingEpisode(episodeUuid: String, podcastUuid: String) -> Episode? {
+    public func addMissingEpisode(episodeUuid: String, podcastUuid: String) async throws -> Episode? {
         let url = ServerConstants.Urls.cache() + "mobile/podcast/findbyepisode/\(podcastUuid)/\(episodeUuid)"
 
-        if let info = loadFrom(url: url) {
-            return addEpisode(podcastInfo: info)
-        }
+        do {
+            if let info = try await loadFrom(url: url) {
+                return addEpisode(podcastInfo: info)
+            }
 
-        return nil
+            return nil
+        } catch {
+            FileLog.shared.addMessage("ServerPodcastManager: failed to load missing episode \(episodeUuid): \(error)")
+            throw error
+        }
     }
 
-    public func addMissingPodcastAndEpisode(episodeUuid: String, podcastUuid: String, shouldUpdateEpisode: Bool = false, completion: ((Episode?) -> ())? = nil) {
+    @discardableResult
+    public func addMissingPodcastAndEpisode(episodeUuid: String, podcastUuid: String, shouldUpdateEpisode: Bool = false) async throws -> Episode? {
         let url = ServerConstants.Urls.cache() + "mobile/podcast/findbyepisode/\(podcastUuid)/\(episodeUuid)"
 
-        if let info = loadFrom(url: url) {
+        do {
+            guard let info = try await loadFrom(url: url) else {
+                return nil
+            }
+
             // Ensure podcast is added, otherwise episode won't be
             if !PodcastExistsHelper.shared.exists(uuid: podcastUuid) {
                 _ = addPodcast(podcastInfo: info, subscribe: false, lastModified: nil)
             }
 
-            let episode = addEpisode(podcastInfo: info, shouldUpdate: shouldUpdateEpisode)
-            completion?(episode)
+            return addEpisode(podcastInfo: info, shouldUpdate: shouldUpdateEpisode)
+        } catch {
+            FileLog.shared.addMessage("ServerPodcastManager: failed to load missing episode \(episodeUuid): \(error)")
+            throw error
         }
     }
 
@@ -292,18 +310,7 @@ public class ServerPodcastManager: NSObject {
             throw URLError(.badURL)
         }
 
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: ServerConstants.HttpHeaders.accept)
-        request.setValue("application/json; charset=UTF8", forHTTPHeaderField: ServerConstants.HttpHeaders.contentType)
-        request.addLocalizationHeaders()
-        let (data, response) = try await urlConnection.send(request: request)
-
-        if (response as? HTTPURLResponse)?.statusCode == ServerConstants.HttpConstants.notModified {
-            return nil
-        }
-
-        guard let data else {
+        guard let data = try await loadData(for: makeJSONRequest(url: url)) else {
             return nil
         }
 
@@ -313,28 +320,32 @@ public class ServerPodcastManager: NSObject {
         return try decoder.decode(PodcastCollection.self, from: data)
     }
 
-    private func loadFrom(url: String) -> [String: Any]? {
-        let url = ServerHelper.asUrl(url)
+    private func loadFrom(url: String) async throws -> [String: Any]? {
+        let request = makeJSONRequest(url: ServerHelper.asUrl(url))
+
+        guard let data = try await loadData(for: request) else { return nil }
+
+        return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+    }
+
+    private func makeJSONRequest(url: URL) -> URLRequest {
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 10)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: ServerConstants.HttpHeaders.accept)
         request.setValue("application/json; charset=UTF8", forHTTPHeaderField: ServerConstants.HttpHeaders.contentType)
         request.addLocalizationHeaders()
-        do {
-            let (responseData, response) = try urlConnection.sendSynchronousRequest(with: request)
-            guard let data = responseData else { return nil }
+        return request
+    }
 
-            if let response = response as? HTTPURLResponse, response.statusCode == ServerConstants.HttpConstants.notModified {
-                return nil
-            }
-            if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                return jsonResponse
-            }
-        } catch {
-            print("Failed to get from server \(error.localizedDescription)")
+    /// Sends the request and returns the response data, or nil when the server responds with 304 Not Modified
+    private func loadData(for request: URLRequest) async throws -> Data? {
+        let (data, response) = try await urlConnection.send(request: request)
+
+        if (response as? HTTPURLResponse)?.statusCode == ServerConstants.HttpConstants.notModified {
+            return nil
         }
 
-        return nil
+        return data
     }
 
     public func highestSortOrderForHomeGrid() -> Int32 {

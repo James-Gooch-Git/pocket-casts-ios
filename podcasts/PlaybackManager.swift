@@ -2623,9 +2623,12 @@ extension PlaybackManager {
         // Get the bookmark's BaseEpisode so we can load it
         guard let episode = bookmark.episode ?? dataManager.findBaseEpisode(uuid: bookmark.episodeUuid) else {
             if firstTry, let podcastUuid = bookmark.podcastUuid {
-                ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: bookmark.episodeUuid, podcastUuid: podcastUuid) { [weak self] episode in
-                    if episode != nil {
-                        self?.playBookmark(bookmark, source: source, firstTry: false)
+                Task { [weak self] in
+                    let episode = try? await ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: bookmark.episodeUuid, podcastUuid: podcastUuid)
+                    guard let self, episode != nil else { return }
+
+                    await MainActor.run {
+                        self.playBookmark(bookmark, source: source, firstTry: false)
                     }
                 }
             }
@@ -2661,9 +2664,12 @@ extension PlaybackManager {
         // Get the bookmark's BaseEpisode so we can load it
         guard let episode = dataManager.findBaseEpisode(uuid: searchEpisode.uuid) else {
             guard firstTry else { return }
-            ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: searchEpisode.uuid, podcastUuid: searchEpisode.podcastUuid) { [weak self] episode in
-                if episode != nil {
-                    self?.playEpisodeSearchResult(searchEpisode, firstTry: false)
+            Task { [weak self] in
+                let episode = try? await ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: searchEpisode.uuid, podcastUuid: searchEpisode.podcastUuid)
+                guard let self, episode != nil else { return }
+
+                await MainActor.run {
+                    self.playEpisodeSearchResult(searchEpisode, firstTry: false)
                 }
             }
             return

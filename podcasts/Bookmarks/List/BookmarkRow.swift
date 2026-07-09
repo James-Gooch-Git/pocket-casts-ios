@@ -4,19 +4,20 @@ import PocketCastsDataModel
 
 struct BookmarkRow<Style: BookmarksStyle>: View {
     @EnvironmentObject var viewModel: BookmarkListViewModel
-    @ObservedObject var rowModel: BookmarkRowViewModel
-
-    private let bookmark: Bookmark
+    @ObservedObject private var rowModel: BookmarkRowViewModel
 
     @ObservedObject private var style: Style
     @State private var highlighted = false
 
     @ScaledMetricWithMaxSize(relativeTo: .body, maxSize: .xxLarge) private var imageSize = 56
 
-    init(bookmark: Bookmark, style: Style) {
-        self.rowModel = .init(bookmark: bookmark)
-        self.bookmark = bookmark
+    init(rowModel: BookmarkRowViewModel, style: Style) {
+        self.rowModel = rowModel
         self.style = style
+    }
+
+    private var bookmark: Bookmark {
+        rowModel.bookmark
     }
 
     var body: some View {

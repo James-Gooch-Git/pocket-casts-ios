@@ -4,13 +4,18 @@ import PocketCastsDataModel
 import PocketCastsServer
 
 class BookmarkRowViewModel: ObservableObject {
-    @Published var heading: String?
-    let title: String
+    private(set) var bookmark: Bookmark
+
+    @Published private(set) var heading: String?
+    @Published private(set) var title: String
     let subtitle: String
     let playButton: String
-    @Published var episode: BaseEpisode?
+    @Published private(set) var episode: BaseEpisode?
+
+    private var loadEpisodeTask: Task<Void, Never>?
 
     init(bookmark: Bookmark) {
+        self.bookmark = bookmark
         self.episode = bookmark.episode
         self.title = bookmark.title
         self.playButton = TimeFormatter.shared.playTimeFormat(time: bookmark.time)
@@ -21,6 +26,23 @@ class BookmarkRowViewModel: ObservableObject {
             updateFromEpisode(episode)
         } else {
             loadEpisode(from: bookmark)
+        }
+    }
+
+    deinit {
+        loadEpisodeTask?.cancel()
+    }
+
+    /// Applies changes from a newer version of the same bookmark, e.g. after its title was edited
+    func update(from bookmark: Bookmark) {
+        self.bookmark = bookmark
+
+        if title != bookmark.title {
+            title = bookmark.title
+        }
+
+        if let episode = bookmark.episode, episode.uuid != self.episode?.uuid {
+            updateFromEpisode(episode)
         }
     }
 
@@ -35,11 +57,14 @@ class BookmarkRowViewModel: ObservableObject {
         if let episode = bookmark.episode ?? dataManager.findBaseEpisode(uuid: bookmark.episodeUuid) {
             updateFromEpisode(episode)
         } else if let podcastUuid = bookmark.podcastUuid {
-            ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: bookmark.episodeUuid, podcastUuid: podcastUuid) { [weak self] episode in
-                if let episode {
-                    DispatchQueue.main.async {
-                        self?.updateFromEpisode(episode)
-                    }
+            loadEpisodeTask = Task { [weak self] in
+                guard let episode = try? await ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: bookmark.episodeUuid, podcastUuid: podcastUuid),
+                      let self, !Task.isCancelled else {
+                    return
+                }
+
+                await MainActor.run {
+                    self.updateFromEpisode(episode)
                 }
             }
         }

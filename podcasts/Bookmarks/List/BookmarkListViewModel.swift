@@ -34,6 +34,15 @@ class BookmarkListViewModel: SearchableListViewModel<Bookmark> {
     var cancellables = Set<AnyCancellable>()
     @Binding private var sortSettingValue: BookmarkSortOption
 
+    /// Row view models, created lazily and kept alive for as long as their bookmark is in the list
+    private var rowModels: [String: BookmarkRowViewModel] = [:]
+
+    override var items: [Bookmark] {
+        didSet {
+            syncRowModels()
+        }
+    }
+
     let feature: PaidFeature = .bookmarks
     var analyticsSource: BookmarkAnalyticsSource = .unknown
 
@@ -58,6 +67,28 @@ class BookmarkListViewModel: SearchableListViewModel<Bookmark> {
         guard let index = items.firstIndex(of: bookmark) else { return }
 
         items.replaceSubrange(index...index, with: [bookmark])
+    }
+
+    func rowModel(for bookmark: Bookmark) -> BookmarkRowViewModel {
+        if let rowModel = rowModels[bookmark.uuid] {
+            return rowModel
+        }
+
+        let rowModel = BookmarkRowViewModel(bookmark: bookmark)
+        rowModels[bookmark.uuid] = rowModel
+        return rowModel
+    }
+
+    /// Pushes updated bookmarks into their row models and drops the models of removed bookmarks
+    private func syncRowModels() {
+        let bookmarks = Dictionary(items.map { ($0.uuid, $0) }, uniquingKeysWith: { bookmark, _ in bookmark })
+
+        rowModels = rowModels.filter { bookmarks.keys.contains($0.key) }
+        for (uuid, rowModel) in rowModels {
+            if let bookmark = bookmarks[uuid] {
+                rowModel.update(from: bookmark)
+            }
+        }
     }
 
     func addListeners() {

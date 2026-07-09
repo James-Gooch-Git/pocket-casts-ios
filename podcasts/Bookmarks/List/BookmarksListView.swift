@@ -181,7 +181,7 @@ struct BookmarksListView<ListStyle: BookmarksStyle>: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(viewModel.bookmarks) { bookmark in
-                    BookmarkRow(bookmark: bookmark, style: style)
+                    BookmarkRow(rowModel: viewModel.rowModel(for: bookmark), style: style)
 
                     if !viewModel.isLast(item: bookmark) {
                         divider
@@ -208,7 +208,7 @@ struct BookmarksListView<ListStyle: BookmarksStyle>: View {
     @ViewBuilder
     private var bookmarksRows: some View {
         ForEach(viewModel.bookmarks) { bookmark in
-            BookmarkRow(bookmark: bookmark, style: style)
+            BookmarkRow(rowModel: viewModel.rowModel(for: bookmark), style: style)
             if !viewModel.isLast(item: bookmark) { divider }
         }
         if actionBarVisible && !useExternalActionBar { Spacer(minLength: BookmarkListConstants.multiSelectionBottomPadding) }

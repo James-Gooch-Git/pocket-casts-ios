@@ -58,7 +58,7 @@ class SyncHistoryTask: ApiBaseTask, @unchecked Sendable {
 
             // on watchOS, we don't show history, so we also don't process server changes we only want to push changes up, not down
             #if !os(watchOS)
-                updateEpisodes(updates: response.changes)
+                updateEpisodesSynchronously(updates: response.changes)
             #endif
 
             // save the server last modified so we can send it back next time
@@ -76,7 +76,21 @@ class SyncHistoryTask: ApiBaseTask, @unchecked Sendable {
         }
     }
 
-    private func updateEpisodes(updates: [Api_HistoryChange]) {
+    /// ApiBaseTask is a synchronous Operation, so block this thread until the async episode updates complete
+    private func updateEpisodesSynchronously(updates: [Api_HistoryChange]) {
+        assert(!Thread.isMainThread, "Blocks the current thread and must never run on the main thread")
+
+        let semaphore = DispatchSemaphore(value: 0)
+
+        Task {
+            await updateEpisodes(updates: updates)
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+    }
+
+    private func updateEpisodes(updates: [Api_HistoryChange]) async {
         for (index, change) in updates.enumerated() {
             // there can be up to 1000 episodes returned from this call, for performance reasons, only grab up to the limit
             if index > ServerConstants.Limits.maxHistoryItems { return }
@@ -88,7 +102,7 @@ class SyncHistoryTask: ApiBaseTask, @unchecked Sendable {
                         DataManager.sharedManager.setEpisodePlaybackInteractionDate(interactionDate: interactionDate, episodeUuid: episode.uuid)
                     }
                 } else {
-                    ServerPodcastManager.shared.addMissingPodcast(episodeUuid: change.episode, podcastUuid: change.podcast)
+                    try? await ServerPodcastManager.shared.addMissingPodcast(episodeUuid: change.episode, podcastUuid: change.podcast)
                     DataManager.sharedManager.setEpisodePlaybackInteractionDate(interactionDate: interactionDate, episodeUuid: change.episode)
                 }
             } else if change.action == HistoryAction.delete.rawValue {

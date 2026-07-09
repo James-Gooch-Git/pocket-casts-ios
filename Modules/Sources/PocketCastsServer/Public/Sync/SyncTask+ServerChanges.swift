@@ -63,16 +63,28 @@ extension SyncTask {
         for episodeItem in episodesToImport {
             importQueue.addOperation { [weak self] in
                 guard let strongSelf = self else { return }
+                assert(!Thread.isMainThread, "Blocks the current thread and must never run on the main thread")
 
-                strongSelf.importEpisode(episodeItem)
+                let semaphore = DispatchSemaphore(value: 0)
+                Task {
+                    await strongSelf.importEpisode(episodeItem)
+                    semaphore.signal()
+                }
+                semaphore.wait()
             }
         }
 
         for playlistItem in playlistsToImport {
             importQueue.addOperation { [weak self] in
                 guard let strongSelf = self else { return }
+                assert(!Thread.isMainThread, "Blocks the current thread and must never run on the main thread")
 
-                strongSelf.importPlaylist(playlistItem)
+                let semaphore = DispatchSemaphore(value: 0)
+                Task {
+                    await strongSelf.importPlaylist(playlistItem)
+                    semaphore.signal()
+                }
+                semaphore.wait()
             }
         }
 
@@ -81,13 +93,13 @@ extension SyncTask {
         for bookmark in bookmarksToImport {
             importQueue.addOperation { [weak self] in
                 guard let strongSelf = self else { return }
-                let semaphore = DispatchSemaphore(value: 0)
+                assert(!Thread.isMainThread, "Blocks the current thread and must never run on the main thread")
 
+                let semaphore = DispatchSemaphore(value: 0)
                 Task {
                     await strongSelf.importBookmark(bookmark)
                     semaphore.signal()
                 }
-
                 semaphore.wait()
             }
         }
@@ -166,13 +178,13 @@ extension SyncTask {
         }
     }
 
-    private func importEpisode(_ episodeItem: Api_SyncUserEpisode) {
+    private func importEpisode(_ episodeItem: Api_SyncUserEpisode) async {
         var existingEpisode = DataManager.sharedManager.findEpisode(uuid: episodeItem.uuid)
 
         if existingEpisode == nil {
             // we don't have this episode so try and find it
             FileLog.shared.addMessage("Trying to find missing episode as part of a sync \(episodeItem.uuid)")
-            existingEpisode = ServerPodcastManager.shared.addMissingEpisode(episodeUuid: episodeItem.uuid, podcastUuid: episodeItem.podcastUuid)
+            existingEpisode = try? await ServerPodcastManager.shared.addMissingEpisode(episodeUuid: episodeItem.uuid, podcastUuid: episodeItem.podcastUuid)
         }
 
         guard let episode = existingEpisode else { return }
@@ -264,7 +276,7 @@ extension SyncTask {
         DataManager.sharedManager.save(folder: folder)
     }
 
-    private func importPlaylist(_ playlistItem: Api_SyncUserPlaylist) {
+    private func importPlaylist(_ playlistItem: Api_SyncUserPlaylist) async {
         let playlistUuid = playlistItem.originalUuid // it's important to use this field, not uuid because the server won't change the case on this one
         var existingPlaylist = DataManager.sharedManager.findPlaylist(uuid: playlistUuid)
 
@@ -385,8 +397,8 @@ extension SyncTask {
         playlist.syncStatus = SyncStatus.synced.rawValue
         DataManager.sharedManager.save(playlist: playlist)
 
-        addedEpisodes.forEach { addedEpisode in
-            ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: addedEpisode.uuid, podcastUuid: addedEpisode.podcastUuid, shouldUpdateEpisode: true)
+        for addedEpisode in addedEpisodes {
+            _ = try? await ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: addedEpisode.uuid, podcastUuid: addedEpisode.podcastUuid, shouldUpdateEpisode: true)
         }
     }
 

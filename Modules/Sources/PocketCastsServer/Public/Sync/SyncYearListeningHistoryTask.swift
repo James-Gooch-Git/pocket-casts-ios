@@ -119,9 +119,17 @@ class SyncYearListeningHistoryTask: ApiBaseTask, @unchecked Sendable {
             dispatchGroup.enter()
 
             DispatchQueue.global(qos: .userInitiated).async {
+                assert(!Thread.isMainThread, "Blocks the current thread and must never run on the main thread")
+
                 let interactionDate = Date(timeIntervalSince1970: TimeInterval(change.modifiedAt / 1000))
 
-                ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: change.episode, podcastUuid: change.podcast)
+                let semaphore = DispatchSemaphore(value: 0)
+                Task {
+                    _ = try? await ServerPodcastManager.shared.addMissingPodcastAndEpisode(episodeUuid: change.episode, podcastUuid: change.podcast)
+                    semaphore.signal()
+                }
+                semaphore.wait()
+
                 DataManager.sharedManager.setEpisodePlaybackInteractionDate(interactionDate: interactionDate, episodeUuid: change.episode)
 
                 // Ensure podcastsToUpdate access is thread-safe to avoid crashes
