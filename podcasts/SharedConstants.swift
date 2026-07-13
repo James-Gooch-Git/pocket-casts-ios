@@ -1,6 +1,10 @@
 enum SharedConstants {
     enum GroupUserDefaults {
-        public static let groupContainerId = "group.au.com.shiftyjelly.pocketcasts"
+        #if STAGING
+            public static let groupContainerId = "group.com.jamesgooch.podcastria"
+        #else
+            public static let groupContainerId = "group.au.com.shiftyjelly.pocketcasts"
+        #endif
         public static let upNextItems = "upNextItems"
         public static let upNextItemsCount = "upNextItemsCount"
         public static let siriSearchItems = "siriSearchItems"

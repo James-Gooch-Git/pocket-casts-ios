@@ -5,6 +5,7 @@ import UIKit
 import Combine
 import Kingfisher
 import PocketCastsUtils
+import PodcastriaLibrary
 import SwiftUI
 
 class MainTabBarController: UITabBarController, NavigationProtocol {
@@ -105,7 +106,7 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
         let filtersViewController = PlaylistsViewController()
         filtersViewController.tabBarItem = UITabBarItem(title: L10n.playlists, image: UIImage(named: "playlists_tab"), tag: pcTabs.firstIndex(of: .filter)!)
 
-        let discoverViewController = DiscoverCollectionViewController(coordinator: DiscoverCoordinator())
+        let discoverViewController = PodcastriaLibraryViewController()
 
         discoverViewController.tabBarItem = UITabBarItem(title: L10n.discover, image: UIImage(named: "discover_tab"), tag: pcTabs.firstIndex(of: .discover)!)
 
@@ -435,9 +436,8 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
         switchToTab(.discover)
         if let index = pcTabs.firstIndex(of: .discover),
            let navController = viewControllers?[safe: index] as? UINavigationController {
-            navController.popToRootViewController(animated: false)
-            if let discoverDelegate = navController.topViewController as? DiscoverDelegate {
-                discoverDelegate.navigateTo(category: category)
+            showInheritedDiscover(in: navController, animated: animated) {
+                $0.navigateTo(category: category)
             }
         }
     }
@@ -446,11 +446,22 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
         switchToTab(.discover)
         if let index = pcTabs.firstIndex(of: .discover),
            let navController = viewControllers?[safe: index] as? UINavigationController {
-            navController.popToRootViewController(animated: false)
-            if let discoverDelegate = navController.topViewController as? DiscoverDelegate {
-                discoverDelegate.navigateTo(listID: listID)
+            showInheritedDiscover(in: navController, animated: animated) {
+                $0.navigateTo(listID: listID)
             }
         }
+    }
+
+    private func showInheritedDiscover(
+        in navigationController: UINavigationController,
+        animated: Bool,
+        navigate: (DiscoverDelegate) -> Void
+    ) {
+        navigationController.popToRootViewController(animated: false)
+        navigationController.setNavigationBarHidden(false, animated: false)
+        let controller = DiscoverCollectionViewController(coordinator: DiscoverCoordinator())
+        navigationController.pushViewController(controller, animated: animated)
+        navigate(controller)
     }
 
     func navigateToUpNext(_ animated: Bool) {
