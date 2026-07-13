@@ -32,6 +32,10 @@ let package = Package(
         .library(
             name: "Modules",
             targets: ["Modules"]
+        ),
+        .library(
+            name: "PodcastriaLibrary",
+            targets: ["PodcastriaLibrary"]
         )
     ],
     dependencies: [
@@ -157,6 +161,15 @@ let package = Package(
             name: "ModulesTests",
             dependencies: ["Modules"],
             path: "Tests/ModulesTests"
+        ),
+        .target(
+            name: "PodcastriaLibrary",
+            path: "Sources/PodcastriaLibrary"
+        ),
+        .testTarget(
+            name: "PodcastriaLibraryTests",
+            dependencies: ["PodcastriaLibrary"],
+            path: "Tests/PodcastriaLibraryTests"
         )
     ]
 )
@@ -204,6 +217,7 @@ enum XcodeSupport {
                     "PocketCastsDataModel",
                     "PocketCastsServer",
                     "PocketCastsUtils",
+                    "PodcastriaLibrary",
                     "EventHorizonSDK",
                     .product(name: "Lottie", package: "lottie-ios"),
                     .product(name: "DifferenceKit", package: "DifferenceKit"),

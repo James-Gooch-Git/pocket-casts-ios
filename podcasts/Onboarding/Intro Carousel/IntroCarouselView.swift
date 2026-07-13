@@ -57,14 +57,24 @@ struct IntroCarouselView: View {
 
     let coordinator: LoginCoordinator
 
-    private let carouselItems = [
+    private var carouselItems: [CarouselItem] { [
         CarouselItem(
             contentView: {
                 VStack(spacing: 100) {
+#if STAGING
+                    VStack(spacing: 8) {
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 52))
+                        Text("Podcastria Library")
+                            .font(.system(size: 30, weight: .bold))
+                    }
+                    .foregroundStyle(ThemeColor.primaryText01(for: theme.activeTheme).color)
+#else
                     Image(AppTheme.pcLogoSmallHorizontalForBackgroundImageName())
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(height: 40)
+#endif
 
                     Image("intro-carousel-podcasts")
                         .resizable()
@@ -101,7 +111,7 @@ struct IntroCarouselView: View {
             title: L10n.onboardingQuoteFolders.wrapInSmartQuotes(),
             description: L10n.onboardingQuoteAuthor
         )
-    ]
+    ] }
 
     private var configuration: StoriesConfiguration {
         let configuration = StoriesConfiguration()

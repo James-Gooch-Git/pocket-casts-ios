@@ -5389,7 +5389,7 @@
 "onboarding_recommendations_subtitle" = "Here are some great shows to start with. Tap to follow, search or import from other apps.";
 
 /* A user review quote shown during onboarding */
-"onboarding_quote_best" = "The best podcast app out there. By far";
+"onboarding_quote_best" = "Turn listening into a learning path";
 
 /* A user review quote shown during onboarding alongside an image of the playback effects */
 "onboarding_quote_customization" = "The amount of customization is insane";
@@ -5398,7 +5398,7 @@
 "onboarding_quote_folders" = "Organizing my podcasts by folders is genius";
 
 /* A generic label representing the authour of the onboarding quotes describing users of the app */
-"onboarding_quote_author" = "Pocket Casts user";
+"onboarding_quote_author" = "Podcastria Library";
 
 /* Notification body for weekly reengagement message */
 "notifications_reengagement_weekly_body" = "It’s been awhile since you’ve listened. Jump back in and enjoy!";
@@ -6497,4 +6497,3 @@
 
 /* Text of the placeholder used in the manual playlist detail screen when all episodes are archived. '%1$@' represents the number of archived episodes */
 "tv_playlist_manual_archived_episodes_placeholder" = "All %1$@ episodes of this playlist have been archived.";
-

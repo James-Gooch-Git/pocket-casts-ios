@@ -1,5 +1,8 @@
 #include "PocketCasts.base.xcconfig"
 
+// Original Podcastria development identity. Do not reuse Automattic signing.
+PRODUCT_BUNDLE_IDENTIFIER_ROOT = com.jamesgooch.podcastria
+DEVELOPMENT_TEAM = S4YXD5869Q
 PRODUCT_BUNDLE_IDENTIFIER = $(PRODUCT_BUNDLE_IDENTIFIER_ROOT)
 
 OTHER_SWIFT_FLAGS = -D STAGING -D DEBUG
