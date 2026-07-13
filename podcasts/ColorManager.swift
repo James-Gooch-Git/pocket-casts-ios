@@ -8,8 +8,8 @@ class ColorManager {
     private let defaultLightTintColor = UIColor(hex: "#1E1F1E")
     private let defaultDarkTintColor = UIColor(hex: "#FFFFFF")
 
-    private let defaultServerLightTint = "#F44336"
-    private let defaultServerDarkTint = "#C62828"
+    private let defaultServerLightTint = "#8A6D34"
+    private let defaultServerDarkTint = "#C2A15E"
 
     // the amount of time to leave between color refresh attempts. This is quite low (30 min) because we write out defaults for shows that are missing artwork, so this should always be present
     private let minTimeBetweenColorRefreshAttempts = 30.minutes

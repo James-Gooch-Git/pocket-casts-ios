@@ -4,14 +4,14 @@ import PocketCastsUtils
 import PocketCastsServer
 
 class AppTheme {
-    private static let tintColor = UIColor(hex: "#F44336")
+    private static let tintColor = UIColor(hex: "#C2A15E")
 
     class func appTintColor() -> UIColor {
         AppTheme.tintColor
     }
 
     class func placeholderTextColor() -> UIColor {
-        Theme.isDarkTheme() ? UIColor(hex: "#808892") : UIColor(hex: "#C7C7CD")
+        Theme.isDarkTheme() ? UIColor(hex: "#8D8779") : UIColor(hex: "#C4BDAF")
     }
 
     class func pcPlusRed() -> UIColor {
@@ -37,11 +37,11 @@ class AppTheme {
     // MARK: - Mini Player
 
     class func miniPlayerButtonColor() -> UIColor {
-        Theme.isDarkTheme() ? UIColor.white : UIColor(hex: "#9097A3")
+        Theme.isDarkTheme() ? UIColor(hex: "#EDE7DC") : UIColor(hex: "#8A8577")
     }
 
     class func waitingForWifiColor() -> UIColor {
-        Theme.isDarkTheme() ? UIColor(hex: "#525466") : UIColor(hex: "#B8C3C9")
+        Theme.isDarkTheme() ? UIColor(hex: "#5C574D") : UIColor(hex: "#C4BDAF")
     }
 
     // MARK: - Sync Buttons
@@ -53,7 +53,7 @@ class AppTheme {
     // MARK: - Discover
 
     class func imagePlaceHolderColor() -> UIColor {
-        Theme.isDarkTheme() ? UIColor(hex: "#4F4F4F") : UIColor(hex: "#E0E6EA")
+        Theme.isDarkTheme() ? UIColor(hex: "#4A463F") : UIColor(hex: "#E5DED0")
     }
 
     // MARK: - Podcast Page
