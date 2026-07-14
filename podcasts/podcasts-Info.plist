@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>PodcastriaAPIBaseURL</key>
-	<string>http://127.0.0.1:8000</string>
+	<string>$(PODCASTRIA_API_SCHEME)://$(PODCASTRIA_API_HOST):$(PODCASTRIA_API_PORT)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>au.com.shiftyjelly.podcasts.Refresh</string>
@@ -1025,7 +1025,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>This allows you to add custom images to your files</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Pocket Casts uses this to find Google Cast devices on your network. If you don&apos;t use this feature feel free to say no.</string>
+	<string>Podcastria connects to your development catalogue and finds Google Cast devices on your local network.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Pocket Casts needs to access your microphone in order to detect nearby Google Cast devices.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

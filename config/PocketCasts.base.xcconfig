@@ -7,6 +7,11 @@ SWIFT_VERSION = 5.0
 MARKETING_VERSION = $(VERSION_SHORT)
 CURRENT_PROJECT_VERSION = $(VERSION_LONG)
 
+// Development catalogue default. Override the host for a device-reachable build.
+PODCASTRIA_API_SCHEME = http
+PODCASTRIA_API_HOST = 127.0.0.1
+PODCASTRIA_API_PORT = 8000
+
 // Define a root bundle identifier so that extensions can append to it
 PRODUCT_BUNDLE_IDENTIFIER_ROOT = au.com.shiftyjelly.podcasts
 
