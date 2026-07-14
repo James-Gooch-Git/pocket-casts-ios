@@ -3,10 +3,33 @@ import SwiftUI
 struct HarnessRootView: View {
   @State private var selectedEpisodeTitle: String?
 
+  private var client: any LibraryAPIClient {
+    if let value = ProcessInfo.processInfo.environment["PODCASTRIA_API_BASE_URL"],
+       let baseURL = URL(string: value) {
+      return HTTPLibraryAPIClient(baseURL: baseURL)
+    }
+    return FixtureLibraryAPIClient()
+  }
+
+  private var shouldAutorunSmartPlaylist: Bool {
+    ProcessInfo.processInfo.environment["PODCASTRIA_SMART_PLAYLIST_AUTORUN"] == "1"
+  }
+
   var body: some View {
-    LibraryView(client: FixtureLibraryAPIClient()) { episode in
-      Task { @MainActor in
-        selectedEpisodeTitle = episode.title
+    Group {
+      if shouldAutorunSmartPlaylist {
+        SmartPlaylistView(
+          client: client,
+          podcastID: nil,
+          podcastTitle: nil,
+          submitsOnAppear: true
+        )
+      } else {
+        LibraryView(client: client) { episode in
+          Task { @MainActor in
+            selectedEpisodeTitle = episode.title
+          }
+        }
       }
     }
     .alert(
@@ -34,6 +57,10 @@ private struct FixtureLibraryAPIClient: LibraryAPIClient {
 
   func podcast(id: UUID) async throws -> PodcastDetailResponse {
     try Self.decode(Self.podcastJSON)
+  }
+
+  func smartPlaylist(request: SmartPlaylistRequest) async throws -> SmartPlaylistResponse {
+    try Self.decode(Self.smartPlaylistJSON)
   }
 
   private static func decode<Value: Decodable>(_ json: String) throws -> Value {
@@ -150,6 +177,38 @@ private struct FixtureLibraryAPIClient: LibraryAPIClient {
               "subjects": ["Aztecs"]
             }
           ]
+        }
+      ]
+    }
+    """#
+
+  private static let smartPlaylistJSON = #"""
+    {
+      "schema_version": "1.0",
+      "prompt": "Teach me Ancient Rome in chronological order",
+      "scope": "catalogue",
+      "planner": "openai",
+      "fallback_used": false,
+      "items": [
+        {
+          "episode_id": "0D41096B-716D-4BE4-9D06-E7DC944DB761",
+          "podcast_id": "7F31CCEE-87A8-4E62-B3DB-0D5FE03C8E62",
+          "podcast_title": "The Rest Is History",
+          "episode_title": "The Fall of Rome: Part 1",
+          "published_at": "2026-07-01T12:00:00Z",
+          "series_key": "fall-of-rome",
+          "series_order": 1,
+          "reason": "Matched ancient Rome"
+        },
+        {
+          "episode_id": "2E2FE7B1-A0B0-43DF-B73B-CFEC6EE71F13",
+          "podcast_id": "7F31CCEE-87A8-4E62-B3DB-0D5FE03C8E62",
+          "podcast_title": "The Rest Is History",
+          "episode_title": "The Fall of Rome: Part 2",
+          "published_at": "2026-07-02T12:00:00Z",
+          "series_key": "fall-of-rome",
+          "series_order": 2,
+          "reason": "Matched ancient Rome"
         }
       ]
     }

@@ -12,6 +12,7 @@ public struct LibraryView: View {
     @State private var errorMessage: String?
     @State private var isLoading = false
     @State private var searchText = ""
+    @State private var isShowingSmartPlaylist = false
 
     public init(
         client: any LibraryAPIClient,
@@ -49,9 +50,20 @@ public struct LibraryView: View {
                         selectedPodcast = nil
                     }
                 }
+                Button("Smart playlist") {
+                    isShowingSmartPlaylist = true
+                }
+                .accessibilityIdentifier("smart-playlist-open")
             }
         }
         .tint(palette.accent)
+        .sheet(isPresented: $isShowingSmartPlaylist) {
+            SmartPlaylistView(
+                client: client,
+                podcastID: selectedPodcast?.id,
+                podcastTitle: selectedPodcast?.title
+            )
+        }
         .task {
             await loadCatalogue()
         }

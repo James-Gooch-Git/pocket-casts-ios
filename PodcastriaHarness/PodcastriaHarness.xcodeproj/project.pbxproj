@@ -16,6 +16,7 @@
 		A00000000000000000000008 /* LibraryAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000017 /* LibraryAPI.swift */; };
 		A00000000000000000000009 /* LibrarySearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000018 /* LibrarySearch.swift */; };
 		A0000000000000000000000A /* HarnessLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001C /* HarnessLibraryTests.swift */; };
+		A0000000000000000000000B /* SmartPlaylistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000001F /* SmartPlaylistView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		A0000000000000000000001A /* PodcastriaDesign.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastriaDesign.swift; sourceTree = "<group>"; };
 		A0000000000000000000001C /* HarnessLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessLibraryTests.swift; sourceTree = "<group>"; };
 		A0000000000000000000001D /* PodcastriaHarnessTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PodcastriaHarnessTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0000000000000000000001F /* SmartPlaylistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartPlaylistView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +76,7 @@
 				A00000000000000000000018 /* LibrarySearch.swift */,
 				A00000000000000000000019 /* LibraryView.swift */,
 				A0000000000000000000001A /* PodcastriaDesign.swift */,
+				A0000000000000000000001F /* SmartPlaylistView.swift */,
 			);
 			name = PodcastriaLibrary;
 			path = ../Modules/Sources/PodcastriaLibrary;
@@ -200,6 +203,7 @@
 				A00000000000000000000005 /* LibrarySearch.swift in Sources */,
 				A00000000000000000000006 /* LibraryView.swift in Sources */,
 				A00000000000000000000007 /* PodcastriaDesign.swift in Sources */,
+				A0000000000000000000000B /* SmartPlaylistView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

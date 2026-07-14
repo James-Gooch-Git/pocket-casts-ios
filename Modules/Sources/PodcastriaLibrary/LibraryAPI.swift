@@ -113,9 +113,70 @@ public struct Pagination: Codable, Equatable, Sendable {
     public let returned: Int
 }
 
+public struct SmartPlaylistRequest: Codable, Equatable, Sendable {
+    public let prompt: String
+    public let podcastID: UUID?
+    public let limit: Int
+
+    public init(prompt: String, podcastID: UUID? = nil, limit: Int = 20) {
+        self.prompt = prompt
+        self.podcastID = podcastID
+        self.limit = limit
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case prompt
+        case podcastID = "podcast_id"
+        case limit
+    }
+}
+
+public struct SmartPlaylistResponse: Codable, Equatable, Sendable {
+    public let schemaVersion: String
+    public let prompt: String
+    public let scope: String
+    public let planner: String
+    public let fallbackUsed: Bool
+    public let items: [SmartPlaylistItem]
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion = "schema_version"
+        case prompt
+        case scope
+        case planner
+        case fallbackUsed = "fallback_used"
+        case items
+    }
+}
+
+public struct SmartPlaylistItem: Codable, Equatable, Identifiable, Sendable {
+    public let episodeID: UUID
+    public let podcastID: UUID
+    public let podcastTitle: String
+    public let episodeTitle: String
+    public let publishedAt: Date?
+    public let seriesKey: String?
+    public let seriesOrder: Int?
+    public let reason: String
+
+    public var id: UUID { episodeID }
+
+    enum CodingKeys: String, CodingKey {
+        case episodeID = "episode_id"
+        case podcastID = "podcast_id"
+        case podcastTitle = "podcast_title"
+        case episodeTitle = "episode_title"
+        case publishedAt = "published_at"
+        case seriesKey = "series_key"
+        case seriesOrder = "series_order"
+        case reason
+    }
+}
+
 public protocol LibraryAPIClient: Sendable {
     func catalogue() async throws -> CatalogueResponse
     func podcast(id: UUID) async throws -> PodcastDetailResponse
+    func smartPlaylist(request: SmartPlaylistRequest) async throws -> SmartPlaylistResponse
 }
 
 public struct HTTPLibraryAPIClient: LibraryAPIClient {
@@ -145,6 +206,20 @@ public struct HTTPLibraryAPIClient: LibraryAPIClient {
             throw LibraryAPIError.unsuccessfulResponse
         }
         return try decoder.decode(PodcastDetailResponse.self, from: data)
+    }
+
+    public func smartPlaylist(request: SmartPlaylistRequest) async throws -> SmartPlaylistResponse {
+        let url = baseURL.appending(path: "v1/playlists/smart")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try JSONEncoder().encode(request)
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw LibraryAPIError.unsuccessfulResponse
+        }
+        return try decoder.decode(SmartPlaylistResponse.self, from: data)
     }
 
     private var decoder: JSONDecoder {

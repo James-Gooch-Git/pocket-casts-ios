@@ -90,3 +90,36 @@ import Testing
     #expect(LibraryFuzzySearch.groups([group], matching: "break in").first?.episodes == [episode])
     #expect(LibraryFuzzySearch.groups([group], matching: "samurai").isEmpty)
 }
+
+@Test func decodesVersionedSmartPlaylistAndPlannerProvenance() throws {
+    let data = Data(
+        """
+        {
+          "schema_version": "1.0",
+          "prompt": "Teach me Ancient Rome",
+          "scope": "catalogue",
+          "planner": "cache",
+          "fallback_used": false,
+          "items": [{
+            "episode_id": "22222222-2222-2222-2222-222222222222",
+            "podcast_id": "11111111-1111-1111-1111-111111111111",
+            "podcast_title": "The History of Rome",
+            "episode_title": "The Roman Kingdom",
+            "published_at": "2026-07-10T10:00:00Z",
+            "series_key": "history-of-rome",
+            "series_order": 2,
+            "reason": "Matched ancient Rome"
+          }]
+        }
+        """.utf8
+    )
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+
+    let response = try decoder.decode(SmartPlaylistResponse.self, from: data)
+
+    #expect(response.schemaVersion == "1.0")
+    #expect(response.planner == "cache")
+    #expect(response.items.first?.podcastTitle == "The History of Rome")
+    #expect(response.items.first?.reason == "Matched ancient Rome")
+}
