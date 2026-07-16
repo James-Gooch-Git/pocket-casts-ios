@@ -296,7 +296,7 @@ extension AppDelegate {
 
         // Promotion Codes:
         JLRoutes.global().addRoute("/redeem/promo/*") { [weak self] parameters -> Bool in
-            guard self != nil else { return false }
+            guard ProductFeaturePolicy.usesPocketCastsSubscriptions, self != nil else { return false }
             var promoCode: String?
             if let pathComponents = parameters[JLRouteWildcardComponentsKey] as? [String], !pathComponents.isEmpty {
                 promoCode = pathComponents[0]
@@ -308,7 +308,7 @@ extension AppDelegate {
 
         // Supporter Podcasts
         JLRoutes.global().addRoute("/premium/podcast/*") { [weak self] parameters -> Bool in
-            guard self != nil else { return false }
+            guard ProductFeaturePolicy.usesPocketCastsSubscriptions, self != nil else { return false }
 
             if let pathComponents = parameters[JLRouteWildcardComponentsKey] as? [String], !pathComponents.isEmpty, let podcastTitle = parameters["title"] as? String {
                 let uuid = pathComponents[0]
@@ -333,7 +333,7 @@ extension AppDelegate {
         }
 
         JLRoutes.global().addRoute("/premium/supporter-contributions/*") { [weak self] parameters -> Bool in
-            guard self != nil else { return false }
+            guard ProductFeaturePolicy.usesPocketCastsSubscriptions, self != nil else { return false }
             if let pathComponents = parameters[JLRouteWildcardComponentsKey] as? [String], !pathComponents.isEmpty {
                 let uuid = pathComponents[0]
 
@@ -435,6 +435,7 @@ extension AppDelegate {
         }
 
         JLRoutes.global().addRoute("/upsell") { _ -> Bool in
+            guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return false }
             guard let viewController = SceneHelper.rootViewController() else { return false }
             let source = PlusUpgradeViewSource(rawValue: ["source"] as? String ?? PlusUpgradeViewSource.deepLink.rawValue) ?? .unknown
             NavigationManager.sharedManager.navigateTo(NavigationManager.subscriptionRequiredPageKey, data: ["source": source, NavigationManager.subscriptionUpgradeVCKey: viewController])
@@ -583,7 +584,7 @@ extension AppDelegate {
     }
 
     private func setupTestFlightIAPRoutes() {
-        if BuildEnvironment.current != .testFlight {
+        if !ProductFeaturePolicy.usesPocketCastsSubscriptions || BuildEnvironment.current != .testFlight {
             return
         }
         JLRoutes.global().addRoute("/iap/:enabled") {[weak self] parameters -> Bool in
