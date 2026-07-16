@@ -12,6 +12,16 @@ struct OnboardingFlow: AnalyticsSourceProvider {
     private(set) var accountCreated: ((Bool)->())?
 
     mutating func begin(flow: Flow, in controller: UIViewController? = nil, source: PlusUpgradeViewSource, context: Context? = nil, customTitle: String? = nil, accountCreated: ((Bool)->())? = nil) -> UIViewController {
+        if !ProductFeaturePolicy.usesPocketCastsSubscriptions, flow.requiresPocketCastsSubscription {
+            let alert = UIAlertController(
+                title: "Unavailable in Podcastria",
+                message: "This Pocket Casts subscription service is not part of Podcastria.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.ok, style: .default))
+            return alert
+        }
+
         self.currentFlow = flow
         self.source = source
         self.accountCreated = accountCreated
@@ -193,6 +203,17 @@ struct OnboardingFlow: AnalyticsSourceProvider {
         var shouldDismissAfterPurchase: Bool {
             switch self {
             case .endOfYearUpsell, .suggestedFolderUpsell:
+                true
+            default:
+                false
+            }
+        }
+
+        var requiresPocketCastsSubscription: Bool {
+            switch self {
+            case .plusUpsell, .plusAccountUpgrade, .patronAccountUpgrade,
+                 .plusAccountUpgradeNeedsLogin, .endOfYearUpsell,
+                 .suggestedFolderUpsell, .promoCode, .referralCode:
                 true
             default:
                 false

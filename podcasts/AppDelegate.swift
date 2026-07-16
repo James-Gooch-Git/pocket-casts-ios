@@ -122,11 +122,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         setupBackgroundRefresh()
 
-        IAPHelper.shared.setup(hasSubscription: SubscriptionHelper.hasActiveSubscription())
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            IAPHelper.shared.setup(hasSubscription: SubscriptionHelper.hasActiveSubscription())
+        }
 
-        setupSignOutListener()
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            setupSignOutListener()
+        }
 
-        if FeatureFlag.earlyReloadSubscriptionStatus.enabled,
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions,
+           FeatureFlag.earlyReloadSubscriptionStatus.enabled,
            SyncManager.isUserLoggedIn(),
            appInstallState == .updated {
             ApiServerHandler.shared.retrieveSubscriptionStatus()
@@ -155,7 +160,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func handleBecomeActive() {
-        setupSignOutListener()
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            setupSignOutListener()
+        }
         appLifecycleAnalytics.didBecomeActive()
 
         // give the network a few seconds to come up before refreshing, also only refresh if the last refresh was more than 5 minutes ago
@@ -206,7 +213,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         badgeHelper.teardown()
         shortcutManager.stopListeningForShortcutChanges()
 
-        IAPHelper.shared.tearDown()
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            IAPHelper.shared.tearDown()
+        }
         UIApplication.shared.endReceivingRemoteControlEvents()
     }
 

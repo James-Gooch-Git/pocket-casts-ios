@@ -36,13 +36,16 @@ class FoldersCoordinator: NSObject {
         self.dataManager = dataManager
         self.suggestedFoldersModel = SuggestedFoldersModel()
         super.init()
-        Task {
-            await suggestedFoldersModel.load()
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            Task {
+                await suggestedFoldersModel.load()
+            }
         }
     }
 
     func startFolderCreationFlow(from vc: UIViewController) {
-        if FeatureFlag.suggestedFolders.enabled,
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions,
+           FeatureFlag.suggestedFolders.enabled,
            dataManager.allPodcasts(includeUnsubscribed: false, reloadFromDatabase: false).count > Constants.minimumNumberOfPodcasts,
            suggestedFoldersModel.loadingState == .loaded,
            didPodcastsChanged() {
@@ -55,7 +58,8 @@ class FoldersCoordinator: NSObject {
     }
 
     func showSuggestedFolders(from vc: UIViewController, source: AnalyticsSource = .notifications) {
-        guard FeatureFlag.suggestedFolders.enabled,
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions,
+              FeatureFlag.suggestedFolders.enabled,
               dataManager.allPodcasts(includeUnsubscribed: false, reloadFromDatabase: false).count > Constants.minimumNumberOfPodcasts else {
             return
         }
@@ -63,7 +67,8 @@ class FoldersCoordinator: NSObject {
     }
 
     func showUpsellIfNeeded(from vc: UIViewController) {
-        guard FeatureFlag.suggestedFolders.enabled,
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions,
+              FeatureFlag.suggestedFolders.enabled,
               vc.presentedViewController == nil,
               !SubscriptionHelper.hasActiveSubscription(),
               DateUtil.hasEnoughTimePassed(since: startingTime, time: Constants.intervalAfterStartup),
@@ -79,7 +84,7 @@ class FoldersCoordinator: NSObject {
     }
 
     private func manualFolderCreationFlow(from vc: UIViewController) {
-        if !SubscriptionHelper.hasActiveSubscription() {
+        if !ProductFeaturePolicy.hasLocalPremiumAccess, !SubscriptionHelper.hasActiveSubscription() {
             navigationManager.showUpsellView(from: vc, source: .folders)
             return
         }
@@ -100,7 +105,7 @@ class FoldersCoordinator: NSObject {
     }
 
     private func suggestedFolderCreationFlow(from vc: UIViewController, source: AnalyticsSource) {
-        if !SubscriptionHelper.hasActiveSubscription() {
+        if !ProductFeaturePolicy.hasLocalPremiumAccess, !SubscriptionHelper.hasActiveSubscription() {
             currentUpsellFlow = .userInitiated
             showUpsellSuggestedFolder(from: vc, source: source)
             return

@@ -72,7 +72,7 @@ class ProfileViewController: PCViewController, UITableViewDataSource, UITableVie
 
     @IBOutlet var plusInfoView: PlusLockedInfoView! {
         didSet {
-            plusInfoView.isHidden = Settings.plusInfoDismissedOnProfile() || SubscriptionHelper.hasActiveSubscription()
+            plusInfoView.isHidden = !ProductFeaturePolicy.usesPocketCastsSubscriptions || Settings.plusInfoDismissedOnProfile() || SubscriptionHelper.hasActiveSubscription()
             plusInfoView.delegate = self
         }
     }
@@ -184,7 +184,8 @@ class ProfileViewController: PCViewController, UITableViewDataSource, UITableVie
 
         whatsNewDismissed()
 
-        if FeatureFlag.cancelSubscriptionSurvey.enabled,
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions,
+           FeatureFlag.cancelSubscriptionSurvey.enabled,
            SyncManager.isUserLoggedIn(),
            SubscriptionHelper.hasCancelledSubscription,
            !Settings.subscriptionCancelledSurveyShown {
@@ -265,7 +266,7 @@ class ProfileViewController: PCViewController, UITableViewDataSource, UITableVie
         headerViewModel.update()
 
         updateLastRefreshDetails()
-        plusInfoView.isHidden = Settings.plusInfoDismissedOnProfile() || SubscriptionHelper.hasActiveSubscription()
+        plusInfoView.isHidden = !ProductFeaturePolicy.usesPocketCastsSubscriptions || Settings.plusInfoDismissedOnProfile() || SubscriptionHelper.hasActiveSubscription()
         updateFooterFrame()
         refreshTableData()
     }
@@ -486,7 +487,10 @@ class ProfileViewController: PCViewController, UITableViewDataSource, UITableVie
 
     private func refreshTableData() {
         var data: [[ProfileViewController.TableRow]]
-        data = [[.allStats, .downloaded, .uploadedFiles, .starred, .bookmarks, .listeningHistory, .help]]
+        data = [[.allStats, .downloaded, .starred, .bookmarks, .listeningHistory, .help]]
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            data[0].insert(.uploadedFiles, at: 2)
+        }
 
         if EndOfYear.isEndOfYearActive, EndOfYear.isEligible {
             data[0].insert(.endOfYearPrompt, at: 0)
@@ -496,7 +500,8 @@ class ProfileViewController: PCViewController, UITableViewDataSource, UITableVie
             data[0].insert(.kidsProfile, at: 0)
         }
 
-        if ReferralsCoordinator.shared.isReferralAvailableToClaim {
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions,
+           ReferralsCoordinator.shared.isReferralAvailableToClaim {
             data[0].insert(.referralsClaim, at: 0)
         }
 

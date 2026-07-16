@@ -26,7 +26,7 @@ class HomeGridDataHelper {
             }
         }
 
-        if SubscriptionHelper.hasActiveSubscription() {
+        if ProductFeaturePolicy.hasLocalPremiumAccess || SubscriptionHelper.hasActiveSubscription() {
             let allFolders = DataManager.sharedManager.allFolders()
             for folder in allFolders {
                 if folder.name.localizedCaseInsensitiveContains(searchTerm) {
@@ -127,7 +127,7 @@ class HomeGridDataHelper {
     private class func gridItems(orderedBy: LibrarySort, sortedPodcasts: [Podcast]) -> [HomeGridItem] {
         // When a user doesn't have Pocket Casts Plus, all their podcasts will be loaded into the main grid, regardless of if they are in a folder or not
         var gridItems: [HomeGridItem] = []
-        if SubscriptionHelper.hasActiveSubscription() {
+        if ProductFeaturePolicy.hasLocalPremiumAccess || SubscriptionHelper.hasActiveSubscription() {
             let allFolders = DataManager.sharedManager.allFolders()
 
             gridItems += sortedPodcasts.compactMap { podcast in

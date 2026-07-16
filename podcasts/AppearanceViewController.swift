@@ -178,7 +178,7 @@ class AppearanceViewController: PCViewController, UITableViewDataSource, UITable
         let themeSelector = ThemeSelectorView(title: L10n.appearanceThemeSelect, onThemeSelected: { [weak self] theme in
             guard let self else { return }
 
-            if theme.isPlusOnly, !SubscriptionHelper.hasActiveSubscription() {
+            if theme.isPlusOnly, !ProductFeaturePolicy.hasLocalPremiumAccess, !SubscriptionHelper.hasActiveSubscription() {
                 self.dismiss(animated: true) {
                     NavigationManager.sharedManager.showUpsellView(from: self, source: .themes)
                 }
@@ -284,7 +284,9 @@ class AppearanceViewController: PCViewController, UITableViewDataSource, UITable
             newTableData.append([.tabBarMinimizing])
         }
 
-        if !SubscriptionHelper.hasActiveSubscription(), !Settings.plusInfoDismissedOnAppearance() {
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions,
+           !SubscriptionHelper.hasActiveSubscription(),
+           !Settings.plusInfoDismissedOnAppearance() {
             newTableData.append([.plusCallout])
         }
 

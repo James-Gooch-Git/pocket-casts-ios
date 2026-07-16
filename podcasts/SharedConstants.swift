@@ -19,3 +19,13 @@ enum SharedConstants {
         public static let minimumPlaybackSpeed = 0.5
     }
 }
+
+enum ProductFeaturePolicy {
+    #if STAGING
+        static let usesPocketCastsSubscriptions = false
+        static let hasLocalPremiumAccess = true
+    #else
+        static let usesPocketCastsSubscriptions = true
+        static let hasLocalPremiumAccess = false
+    #endif
+}

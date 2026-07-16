@@ -6,10 +6,10 @@ import SwiftUI
 // MARK: - Features
 
 extension PaidFeature {
-    static var bookmarks: PaidFeature = .plusFeature
-    static var deselectChapters: PaidFeature = .plusFeature
-    static var slumber: PaidFeature = .plusFeature
-    static var syncedTranscripts: PaidFeature = .plusFeature
+    static var bookmarks: PaidFeature = .plusFeature(availableLocally: true)
+    static var deselectChapters: PaidFeature = .plusFeature(availableLocally: true)
+    static var slumber: PaidFeature = .plusFeature()
+    static var syncedTranscripts: PaidFeature = .plusFeature()
 }
 
 /// A `PaidFeature` represents a feature that is unlocked with a subscription tier, and is considered to be unlocked if the tier
@@ -26,7 +26,7 @@ extension PaidFeature {
 class PaidFeature: ObservableObject {
     /// Whether the feature is unlocked for the active subscription tier
     var isUnlocked: Bool {
-        subscriptionHelper.activeTier >= tier
+        (availableLocally && ProductFeaturePolicy.hasLocalPremiumAccess) || subscriptionHelper.activeTier >= tier
     }
 
     /// The minimum subscription level required to unlock this feature
@@ -36,6 +36,9 @@ class PaidFeature: ObservableObject {
     ///
     /// Internally this doesn't change anything with the feature, but allows the app to check its state and display different UI if needed.
     let inEarlyAccess: Bool
+
+    /// Whether this feature is entirely device-local and can be offered without Pocket Casts services.
+    let availableLocally: Bool
 
     /// The static class to use to check for the active subscription.
     private let subscriptionHelper: SubscriptionHelper
@@ -50,6 +53,7 @@ class PaidFeature: ObservableObject {
     init(tier: SubscriptionTier,
          betaTier: SubscriptionTier? = nil,
          inEarlyAccess: Bool = false,
+         availableLocally: Bool = false,
          subscriptionHelper: SubscriptionHelper = .shared,
          buildEnvironment: BuildEnvironment = .current) {
         if let betaTier, buildEnvironment == .testFlight {
@@ -59,6 +63,7 @@ class PaidFeature: ObservableObject {
         }
 
         self.inEarlyAccess = inEarlyAccess
+        self.availableLocally = availableLocally
         self.subscriptionHelper = subscriptionHelper
 
         addListeners()
@@ -89,6 +94,7 @@ extension PaidFeature {
 
     /// Presents the `upgradeController` from the given view controller
     func presentUpgradeController(from controller: UIViewController, source: PlusUpgradeViewSource, customTitle: String? = nil) {
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
         controller.presentFromRootController(upgradeController(source: source, customTitle: customTitle))
     }
 
@@ -128,7 +134,7 @@ private extension PaidFeature {
     ///
     /// - Available to Plus and Patron users on the AppStore and Beta.
     /// - The `inEarlyAccess` flag is set to False
-    static var plusFeature: PaidFeature {
-        .init(tier: .plus)
+    static func plusFeature(availableLocally: Bool = false) -> PaidFeature {
+        .init(tier: .plus, availableLocally: availableLocally)
     }
 }

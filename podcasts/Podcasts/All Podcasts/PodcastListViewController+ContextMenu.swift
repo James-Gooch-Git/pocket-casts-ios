@@ -118,7 +118,7 @@ extension PodcastListViewController {
     }
 
     private func showFolderPicker(for podcast: Podcast) {
-        if !SubscriptionHelper.hasActiveSubscription() {
+        if !ProductFeaturePolicy.hasLocalPremiumAccess, !SubscriptionHelper.hasActiveSubscription() {
             NavigationManager.sharedManager.showUpsellView(from: self, source: .folders)
             return
         }

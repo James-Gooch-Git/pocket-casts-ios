@@ -62,6 +62,18 @@ final class PaidFeatureTests: XCTestCase {
         XCTAssertTrue(feature.isUnlocked)
     }
 
+    func testLocalFeatureUsesPodcastriaAccessWithoutSubscription() {
+        let feature = PaidFeature(
+            tier: .plus,
+            availableLocally: true,
+            subscriptionHelper: subscriptionHelper
+        )
+
+        subscriptionHelper.userHasNoSubscription()
+
+        XCTAssertEqual(feature.isUnlocked, ProductFeaturePolicy.hasLocalPremiumAccess)
+    }
+
     // MARK: - Patron Features
 
     func testPatronFeatureIsLockedForNoActiveSubscription() {

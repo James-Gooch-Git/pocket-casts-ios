@@ -164,8 +164,10 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
 
         registerSceneAppearanceObserverIfNeeded()
         fireSystemThemeMayHaveChanged()
-        checkSubscriptionStatusChanged()
-        checkPromotionFinishedAcknowledged()
+        if ProductFeaturePolicy.usesPocketCastsSubscriptions {
+            checkSubscriptionStatusChanged()
+            checkPromotionFinishedAcknowledged()
+        }
         checkWhatsNewAcknowledged()
 
         // Show any app launch announcements/prompts only once
@@ -553,6 +555,7 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
     }
 
     func showSubscriptionRequired(_ upgradeRootViewController: UIViewController, source: PlusUpgradeViewSource, context: OnboardingFlow.Context? = nil, flow: OnboardingFlow.Flow = .plusUpsell) {
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
         // If we're already presenting a view, then present from that view if possible
         let presentingController = presentedViewController ?? view.window?.rootViewController
 
@@ -910,6 +913,7 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
     }
 
     private func checkSubscriptionStatusChanged() {
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
         checkSubscriptionCancelledAcknowledgement()
     }
 
@@ -935,6 +939,7 @@ class MainTabBarController: UITabBarController, NavigationProtocol {
     }
 
     private func checkPromotionFinishedAcknowledged() {
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
         let promoFinishedAcknowledged = Settings.promotionFinishedAcknowledged()
         let giftDays = SubscriptionHelper.subscriptionGiftDays()
         let timeToSubscriptionExpiry = SubscriptionHelper.timeToSubscriptionExpiry() ?? 0

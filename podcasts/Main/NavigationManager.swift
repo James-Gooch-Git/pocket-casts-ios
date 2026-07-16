@@ -316,6 +316,7 @@ class NavigationManager {
 
 extension NavigationManager {
     func showUpsellView(from controller: UIViewController, source: PlusUpgradeViewSource, context: OnboardingFlow.Context? = nil, flow: OnboardingFlow.Flow = .plusUpsell) {
+        guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
         navigateTo(Self.subscriptionRequiredPageKey, data: [Self.subscriptionUpgradeVCKey: controller, "source": source, "flow": flow, "context": context ?? [:]])
     }
 }

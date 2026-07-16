@@ -18,10 +18,13 @@ class SettingsViewController: PCViewController, UITableViewDataSource, UITableVi
         var visible: Bool {
             switch self {
             case .watch:
-                return WCSession.isSupported()
+                return ProductFeaturePolicy.usesPocketCastsSubscriptions && WCSession.isSupported()
+
+            case .customFiles:
+                return ProductFeaturePolicy.usesPocketCastsSubscriptions
 
             case .pocketCastsPlus:
-                return !SubscriptionHelper.hasActiveSubscription()
+                return ProductFeaturePolicy.usesPocketCastsSubscriptions && !SubscriptionHelper.hasActiveSubscription()
 
             default:
                 return true
@@ -142,7 +145,9 @@ class SettingsViewController: PCViewController, UITableViewDataSource, UITableVi
         cell.settingsImage.image = tableRow.display.image
 
         switch tableRow {
-        case .appearance, .customFiles, .watch:
+        case .appearance:
+            cell.plusIndicator.isHidden = ProductFeaturePolicy.hasLocalPremiumAccess || SubscriptionHelper.hasActiveSubscription()
+        case .customFiles, .watch:
             cell.plusIndicator.isHidden = SubscriptionHelper.hasActiveSubscription()
         default:
             break
@@ -195,7 +200,8 @@ class SettingsViewController: PCViewController, UITableViewDataSource, UITableVi
         case .watch:
             navigationController?.pushViewController(WatchSettingsViewController(), animated: true)
         case .pocketCastsPlus:
-                navigationController?.present(OnboardingFlow.shared.begin(flow: .plusUpsell, source: .settings), animated: true)
+            guard ProductFeaturePolicy.usesPocketCastsSubscriptions else { return }
+            navigationController?.present(OnboardingFlow.shared.begin(flow: .plusUpsell, source: .settings), animated: true)
         case .privacy:
             navigationController?.pushViewController(PrivacySettingsViewController(), animated: true)
         case .developer:

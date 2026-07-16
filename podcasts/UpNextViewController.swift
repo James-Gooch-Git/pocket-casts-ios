@@ -280,7 +280,8 @@ class UpNextViewController: UIViewController, UIGestureRecognizerDelegate {
     @objc private func shuffleButtonTapped() {
         FileLog.shared.addMessage("UpNext shuffleButtonTapped: user has active subscription: \(SubscriptionHelper.hasActiveSubscription()) and is logged in: \(SyncManager.isUserLoggedIn())")
 
-        if !SubscriptionHelper.hasActiveSubscription() || !SyncManager.isUserLoggedIn() {
+        if !ProductFeaturePolicy.hasLocalPremiumAccess,
+           !SubscriptionHelper.hasActiveSubscription() || !SyncManager.isUserLoggedIn() {
             // Edge case where the UpNext is presented by the player container with a free user.
             // In this case we need to dismiss the UpNext to present the paywall
             if let mainTabBar = presentingViewController?.presentingViewController, presentingViewController is PlayerContainerViewController {
@@ -307,7 +308,8 @@ class UpNextViewController: UIViewController, UIGestureRecognizerDelegate {
     @objc private func themeDidChange() {
         FileLog.shared.addMessage("UpNext themeDidChange: user has active subscription: \(SubscriptionHelper.hasActiveSubscription()) and is logged in: \(SyncManager.isUserLoggedIn())")
 
-        if !SubscriptionHelper.hasActiveSubscription() || !SyncManager.isUserLoggedIn() {
+        if !ProductFeaturePolicy.hasLocalPremiumAccess,
+           !SubscriptionHelper.hasActiveSubscription() || !SyncManager.isUserLoggedIn() {
             shuffleButton.setImage(UIImage(named: "shuffle-plus"), for: .normal)
             shuffleButton.isSelected = false
         } else {

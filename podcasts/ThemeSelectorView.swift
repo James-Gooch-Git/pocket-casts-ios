@@ -35,7 +35,7 @@ struct ThemeSelectorView: View {
                         Button(action: {
                             onThemeSelected(currentTheme)
                         }) {
-                            ThemePreviewView(themeType: currentTheme, isSelected: selectedTheme == currentTheme, isLocked: currentTheme.isPlusOnly && !SubscriptionHelper.hasActiveSubscription())
+                            ThemePreviewView(themeType: currentTheme, isSelected: selectedTheme == currentTheme, isLocked: currentTheme.isPlusOnly && !ProductFeaturePolicy.hasLocalPremiumAccess && !SubscriptionHelper.hasActiveSubscription())
                         }
                     }
                 }
