@@ -12,6 +12,7 @@ public struct LibraryView: View {
     @State private var errorMessage: String?
     @State private var isLoading = false
     @State private var searchText = ""
+    @State private var expandedSeriesIDs = Set<String>()
     @State private var isShowingSmartPlaylist = false
 
     public init(
@@ -205,17 +206,8 @@ public struct LibraryView: View {
         return parts.joined(separator: " · ")
     }
 
-    /// Series render as a grouped inset card with numbered parts, per the
-    /// wireframe's "series as a grouped insert" direction.
     private func seriesCard(_ group: EpisodeGroup) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            PodcastriaMetaLabel(
-                text: "Series · \(group.episodes.count) parts",
-                color: palette.accent
-            )
-            Text(group.title)
-                .font(.podcastriaDisplay(.headline))
-                .foregroundStyle(palette.text)
+        DisclosureGroup(isExpanded: seriesExpansionBinding(for: group)) {
             VStack(spacing: 0) {
                 ForEach(Array(group.episodes.enumerated()), id: \.element.id) { index, episode in
                     seriesRow(episode, fallbackNumber: index + 1)
@@ -224,13 +216,41 @@ public struct LibraryView: View {
                     }
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, 8)
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                PodcastriaMetaLabel(
+                    text: "Series · \(group.episodes.count) parts",
+                    color: palette.accent
+                )
+                Text(group.title)
+                    .font(.podcastriaDisplay(.headline))
+                    .foregroundStyle(palette.text)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(14)
-        .background(palette.card, in: RoundedRectangle(cornerRadius: 12))
+        .background(palette.card, in: RoundedRectangle(cornerRadius: 8))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(palette.cardBorder)
+        )
+        .accessibilityIdentifier("series-group-\(group.key)")
+    }
+
+    private func seriesExpansionBinding(for group: EpisodeGroup) -> Binding<Bool> {
+        Binding(
+            get: {
+                !searchText.isEmpty || expandedSeriesIDs.contains(group.id)
+            },
+            set: { isExpanded in
+                guard searchText.isEmpty else { return }
+                if isExpanded {
+                    expandedSeriesIDs.insert(group.id)
+                } else {
+                    expandedSeriesIDs.remove(group.id)
+                }
+            }
         )
     }
 
