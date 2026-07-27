@@ -63,6 +63,29 @@ private struct FixtureLibraryAPIClient: LibraryAPIClient {
     try Self.decode(Self.smartPlaylistJSON)
   }
 
+  func searchPodcasts(request: PodcastSearchRequest) async throws -> PodcastSearchResponse {
+    PodcastSearchResponse(results: [
+      PodcastSearchResult(
+        id: "fixture-search-1",
+        title: "The Rest Is History",
+        author: "Tom Holland & Dominic Sandbrook",
+        description: "Fixture search result for harness UI development.",
+        feedURL: "https://example.com/feed.xml",
+        artworkURL: nil,
+        episodeCount: 450,
+        lastPublished: nil
+      )
+    ])
+  }
+
+  func subscribe(request: SubscribeRequest) async throws -> SubscribeResponse {
+    SubscribeResponse(
+      podcastUUID: "7F31CCEE-87A8-4E62-B3DB-0D5FE03C8E62",
+      title: "The Rest Is History",
+      episodesAdded: 10
+    )
+  }
+
   private static func decode<Value: Decodable>(_ json: String) throws -> Value {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .iso8601

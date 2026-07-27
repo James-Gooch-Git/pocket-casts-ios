@@ -195,10 +195,108 @@ public struct SmartPlaylistItem: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+// MARK: - Podcast search
+
+public struct PodcastSearchRequest: Codable, Equatable, Sendable {
+    public let query: String
+    public let limit: Int
+
+    public init(query: String, limit: Int = 25) {
+        self.query = query
+        self.limit = limit
+    }
+}
+
+public struct PodcastSearchResponse: Codable, Equatable, Sendable {
+    public let results: [PodcastSearchResult]
+
+    public init(results: [PodcastSearchResult]) {
+        self.results = results
+    }
+}
+
+public struct PodcastSearchResult: Codable, Equatable, Identifiable, Sendable {
+    public let id: String
+    public let title: String
+    public let author: String?
+    public let description: String?
+    public let feedURL: String
+    public let artworkURL: String?
+    public let episodeCount: Int?
+    public let lastPublished: Date?
+
+    public init(
+        id: String,
+        title: String,
+        author: String? = nil,
+        description: String? = nil,
+        feedURL: String,
+        artworkURL: String? = nil,
+        episodeCount: Int? = nil,
+        lastPublished: Date? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.author = author
+        self.description = description
+        self.feedURL = feedURL
+        self.artworkURL = artworkURL
+        self.episodeCount = episodeCount
+        self.lastPublished = lastPublished
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case author
+        case description
+        case feedURL = "feed_url"
+        case artworkURL = "artwork_url"
+        case episodeCount = "episode_count"
+        case lastPublished = "last_published"
+    }
+}
+
+// MARK: - Subscribe
+
+public struct SubscribeRequest: Codable, Equatable, Sendable {
+    public let feedURL: String
+
+    public init(feedURL: String) {
+        self.feedURL = feedURL
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case feedURL = "feed_url"
+    }
+}
+
+public struct SubscribeResponse: Codable, Equatable, Sendable {
+    public let podcastUUID: String
+    public let title: String
+    public let episodesAdded: Int
+
+    public init(podcastUUID: String, title: String, episodesAdded: Int) {
+        self.podcastUUID = podcastUUID
+        self.title = title
+        self.episodesAdded = episodesAdded
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case podcastUUID = "podcast_uuid"
+        case title
+        case episodesAdded = "episodes_added"
+    }
+}
+
+// MARK: - Client protocol
+
 public protocol LibraryAPIClient: Sendable {
     func catalogue() async throws -> CatalogueResponse
     func podcast(id: UUID) async throws -> PodcastDetailResponse
     func smartPlaylist(request: SmartPlaylistRequest) async throws -> SmartPlaylistResponse
+    func searchPodcasts(request: PodcastSearchRequest) async throws -> PodcastSearchResponse
+    func subscribe(request: SubscribeRequest) async throws -> SubscribeResponse
 }
 
 public struct HTTPLibraryAPIClient: LibraryAPIClient {
@@ -242,6 +340,34 @@ public struct HTTPLibraryAPIClient: LibraryAPIClient {
             throw LibraryAPIError.unsuccessfulResponse
         }
         return try decoder.decode(SmartPlaylistResponse.self, from: data)
+    }
+
+    public func searchPodcasts(request: PodcastSearchRequest) async throws -> PodcastSearchResponse {
+        var components = URLComponents(url: baseURL.appending(path: "v1/search"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "q", value: request.query),
+            URLQueryItem(name: "limit", value: String(request.limit))
+        ]
+        let (data, response) = try await session.data(from: components.url!)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw LibraryAPIError.unsuccessfulResponse
+        }
+        return try decoder.decode(PodcastSearchResponse.self, from: data)
+    }
+
+    public func subscribe(request: SubscribeRequest) async throws -> SubscribeResponse {
+        let url = baseURL.appending(path: "v1/subscribe")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try JSONEncoder().encode(request)
+        let (data, response) = try await session.data(for: urlRequest)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200 ..< 300).contains(httpResponse.statusCode) else {
+            throw LibraryAPIError.unsuccessfulResponse
+        }
+        return try decoder.decode(SubscribeResponse.self, from: data)
     }
 
     private var decoder: JSONDecoder {

@@ -4,6 +4,7 @@ import SwiftUI
 public struct LibraryView: View {
     private let client: any LibraryAPIClient
     private let onSelectEpisode: @Sendable (LibraryPlaybackRequest) -> Void
+    private let onSubscribed: @Sendable (SubscribeResponse) -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -14,13 +15,16 @@ public struct LibraryView: View {
     @State private var searchText = ""
     @State private var expandedSeriesIDs = Set<String>()
     @State private var isShowingSmartPlaylist = false
+    @State private var isShowingSearch = false
 
     public init(
         client: any LibraryAPIClient,
-        onSelectEpisode: @escaping @Sendable (LibraryPlaybackRequest) -> Void
+        onSelectEpisode: @escaping @Sendable (LibraryPlaybackRequest) -> Void,
+        onSubscribed: @escaping @Sendable (SubscribeResponse) -> Void = { _ in }
     ) {
         self.client = client
         self.onSelectEpisode = onSelectEpisode
+        self.onSubscribed = onSubscribed
     }
 
     /// Episode rows are only ever shown inside a selected podcast, so the
@@ -53,18 +57,33 @@ public struct LibraryView: View {
             .background(palette.background)
             .navigationTitle(selectedPodcast?.title ?? catalogue?.productName ?? "Podcastria Library")
             .toolbar {
-                if selectedPodcast != nil {
-                    Button("Library") {
-                        selectedPodcast = nil
+                ToolbarItemGroup(placement: .navigationBarLeading) {
+                    if selectedPodcast != nil {
+                        Button("Library") {
+                            selectedPodcast = nil
+                        }
                     }
                 }
-                Button("Smart playlist") {
-                    isShowingSmartPlaylist = true
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button {
+                        isShowingSearch = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("Find podcasts")
+                    .accessibilityIdentifier("podcast-search-open")
+
+                    Button("Smart playlist") {
+                        isShowingSmartPlaylist = true
+                    }
+                    .accessibilityIdentifier("smart-playlist-open")
                 }
-                .accessibilityIdentifier("smart-playlist-open")
             }
         }
         .tint(palette.accent)
+        .sheet(isPresented: $isShowingSearch) {
+            PodcastSearchView(client: client, onSubscribed: onSubscribed)
+        }
         .sheet(isPresented: $isShowingSmartPlaylist) {
             SmartPlaylistView(
                 client: client,

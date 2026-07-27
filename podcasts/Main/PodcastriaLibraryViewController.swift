@@ -1,4 +1,5 @@
 import PocketCastsDataModel
+import PocketCastsServer
 import PodcastriaLibrary
 import SwiftUI
 import UIKit
@@ -17,6 +18,13 @@ final class PodcastriaLibraryViewController: UIViewController {
                 Task { @MainActor in
                     self?.playbackAdapter.play(request, presentingFrom: self)
                 }
+            },
+            onSubscribed: { response in
+                ServerPodcastManager.shared.addFromUuid(
+                    podcastUuid: response.podcastUUID,
+                    subscribe: true,
+                    completion: nil
+                )
             }
         )
         let host = UIHostingController(rootView: library)
