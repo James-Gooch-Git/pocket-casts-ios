@@ -3,7 +3,7 @@ import SwiftUI
 @available(iOS 16, macOS 12, tvOS 16, watchOS 9, *)
 public struct LibraryView: View {
     private let client: any LibraryAPIClient
-    private let onSelectEpisode: @Sendable (EpisodeSummary) -> Void
+    private let onSelectEpisode: @Sendable (LibraryPlaybackRequest) -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -17,10 +17,17 @@ public struct LibraryView: View {
 
     public init(
         client: any LibraryAPIClient,
-        onSelectEpisode: @escaping @Sendable (EpisodeSummary) -> Void
+        onSelectEpisode: @escaping @Sendable (LibraryPlaybackRequest) -> Void
     ) {
         self.client = client
         self.onSelectEpisode = onSelectEpisode
+    }
+
+    /// Episode rows are only ever shown inside a selected podcast, so the
+    /// podcast context needed for playback is always available here.
+    private func select(_ episode: EpisodeSummary) {
+        guard let selectedPodcast else { return }
+        onSelectEpisode(selectedPodcast.playbackRequest(for: episode))
     }
 
     private var palette: PodcastriaDesign.Palette {
@@ -256,7 +263,7 @@ public struct LibraryView: View {
 
     private func seriesRow(_ episode: EpisodeSummary, fallbackNumber: Int) -> some View {
         Button {
-            onSelectEpisode(episode)
+            select(episode)
         } label: {
             HStack(spacing: 10) {
                 Text("\(episode.seriesOrder ?? fallbackNumber)")
@@ -301,7 +308,7 @@ public struct LibraryView: View {
 
     private func episodeButton(_ episode: EpisodeSummary, in group: EpisodeGroup) -> some View {
         Button {
-            onSelectEpisode(episode)
+            select(episode)
         } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(episode.title)

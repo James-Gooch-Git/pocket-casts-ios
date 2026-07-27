@@ -6497,3 +6497,9 @@
 
 /* Text of the placeholder used in the manual playlist detail screen when all episodes are archived. '%1$@' represents the number of archived episodes */
 "tv_playlist_manual_archived_episodes_placeholder" = "All %1$@ episodes of this playlist have been archived.";
+
+/* Title of the alert shown when a curated Podcastria episode cannot be played */
+"podcastria_episode_unavailable_title" = "Episode unavailable";
+
+/* Message of the alert shown when a curated Podcastria episode has no audio to play */
+"podcastria_episode_unavailable_message" = "This curated episode doesn't have any audio available yet.";

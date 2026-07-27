@@ -94,6 +94,28 @@ public struct EpisodeSummary: Codable, Equatable, Identifiable, Sendable {
     public let seriesOrder: Int?
     public let subjects: [String]
 
+    public init(
+        id: UUID,
+        sourceGUID: String,
+        title: String,
+        showNotes: String? = nil,
+        audioURL: URL? = nil,
+        publishedAt: Date? = nil,
+        seriesKey: String? = nil,
+        seriesOrder: Int? = nil,
+        subjects: [String] = []
+    ) {
+        self.id = id
+        self.sourceGUID = sourceGUID
+        self.title = title
+        self.showNotes = showNotes
+        self.audioURL = audioURL
+        self.publishedAt = publishedAt
+        self.seriesKey = seriesKey
+        self.seriesOrder = seriesOrder
+        self.subjects = subjects
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case sourceGUID = "source_guid"

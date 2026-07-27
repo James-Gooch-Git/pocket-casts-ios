@@ -25,9 +25,9 @@ struct HarnessRootView: View {
           submitsOnAppear: true
         )
       } else {
-        LibraryView(client: client) { episode in
+        LibraryView(client: client) { request in
           Task { @MainActor in
-            selectedEpisodeTitle = episode.title
+            selectedEpisodeTitle = request.episode.title
           }
         }
       }
